@@ -1,0 +1,21 @@
+AM2 DTPK SND format
+
+All numeric values are Little Endian
+0x00 - 4 bytes - Header: DTPK
+0x08 - 4 bytes - 32 bit Size of file
+0x3C - 4 bytes - 32 bit Sample Table Location
+
+Sample Table:
+0x00 - 4 bytes - 32 bit Index of last sample (Add 1 for number of samples)
+0x04 - Start of Sample entries (0x10 bytes each)
+
+Sample Entry:
+0x00 - 4 bytes - 32 bit Sample Location & Type
+    +- & 0x007FFFFF - Sample offset
+    +- & 0x00800000 - Unknown flag.
+    +- & 0x01000000 - Format flag - 0 PCM, 1 ADPCM
+    +- & 0x02000000 - Unknown flag. Is NOT Mono/Stereo
+0x04 - 2 bytes - 16 bit Lower Number (Loop start? TBD)
+0x06 - 2 bytes - 16 bit Higher Number (Loop end? TBD)
+0x08 - 4 bytes - Always 0 (?)
+0x0C - 4 bytes - 32 bit length of sample data
