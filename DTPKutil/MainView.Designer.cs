@@ -37,7 +37,6 @@
             this.btnExtract = new System.Windows.Forms.Button();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.txtTrackInfo = new System.Windows.Forms.TextBox();
-            this.chkDecompress = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtInput
@@ -126,31 +125,19 @@
             this.txtTrackInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtTrackInfo.Location = new System.Drawing.Point(12, 129);
+            this.txtTrackInfo.Location = new System.Drawing.Point(12, 106);
             this.txtTrackInfo.Multiline = true;
             this.txtTrackInfo.Name = "txtTrackInfo";
             this.txtTrackInfo.ReadOnly = true;
             this.txtTrackInfo.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtTrackInfo.Size = new System.Drawing.Size(430, 220);
+            this.txtTrackInfo.Size = new System.Drawing.Size(430, 243);
             this.txtTrackInfo.TabIndex = 8;
-            // 
-            // chkDecompress
-            // 
-            this.chkDecompress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkDecompress.AutoSize = true;
-            this.chkDecompress.Location = new System.Drawing.Point(258, 106);
-            this.chkDecompress.Name = "chkDecompress";
-            this.chkDecompress.Size = new System.Drawing.Size(184, 17);
-            this.chkDecompress.TabIndex = 9;
-            this.chkDecompress.Text = "Decompress ADPCM (Incorrectly)";
-            this.chkDecompress.UseVisualStyleBackColor = true;
             // 
             // MainView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(454, 361);
-            this.Controls.Add(this.chkDecompress);
             this.Controls.Add(this.txtTrackInfo);
             this.Controls.Add(this.btnReadInfo);
             this.Controls.Add(this.btnExtract);
@@ -178,7 +165,6 @@
         private System.Windows.Forms.Button btnExtract;
         private System.Windows.Forms.Button btnReadInfo;
         private System.Windows.Forms.TextBox txtTrackInfo;
-        private System.Windows.Forms.CheckBox chkDecompress;
     }
 }
 

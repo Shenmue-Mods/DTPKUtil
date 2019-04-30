@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DTPKutil
@@ -65,9 +58,9 @@ namespace DTPKutil
                 txtTrackInfo.Text = track.PrintSamplesInfo();
                 for(int i=0; i<track.Samples.Count;i++)
                 {
-                    string fileOut = Path.GetFileNameWithoutExtension(txtInput.Text) + "_" + (i+1) + ".raw";
+                    string fileOut = Path.GetFileNameWithoutExtension(txtInput.Text) + "_" + (i+1) + ".pcm";
                     fileOut = Path.Combine(txtOutput.Text, fileOut);
-                    File.WriteAllBytes(fileOut, track.GetSampleData(track.Samples[i], chkDecompress.Checked));
+                    File.WriteAllBytes(fileOut, track.GetSampleData(track.Samples[i], true));
                 }
             }
         }
@@ -80,7 +73,7 @@ namespace DTPKutil
             }
             catch (Exception ex)
             {
-                txtTrackInfo.Text = "Bad File";
+                txtTrackInfo.Text = "Bad File. Note the XBOX DTPK is not yet implemented.";
                 MessageBox.Show($"Processing Failed: {ex.Message}");
             }
             return null;

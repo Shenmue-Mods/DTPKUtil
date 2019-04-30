@@ -67,16 +67,8 @@ namespace DTPKutil
         };
 
         static int[] index_scale = {
-            0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266,
-            0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266 //same value for speedup
+            0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266
         };
-
-        static int limit(int val, int min, int max)
-        {
-            if (val < min) return min;
-            else if (val > max) return max;
-            else return val;
-        }
 
         public byte[] GetSampleData(AudioSample sample, bool decompress)
         {
@@ -93,32 +85,29 @@ namespace DTPKutil
         {
             byte[] dst = new byte[length * 4];
             int dstLoc = 0;
-            int signal = 0, step = 0x7f;
+            int cur_quant = 0x7f;
+            int cur_sample = 0;
+            bool highNybble = false;
 
             while (dstLoc < dst.Length)
             {
-                int data = _data[src++];
-                int val = data >> 4; //High nybble
+                int shift1 = highNybble ? 4 : 0;
+                int delta = (_data[src] >> shift1) & 0xf;
 
-                signal += (step * diff_lookup[val]) / 8;
-                signal = limit(signal, -32768, 32767);
+                int x = cur_quant * diff_lookup[delta & 15];
+                x = cur_sample + ((int)(x + ((uint)x >> 29)) >> 3);
+                cur_sample = (x < -32768) ? -32768 : ((x > 32767) ? 32767 : x);
+                cur_quant = (cur_quant * index_scale[delta & 7]) >> 8;
+                cur_quant = (cur_quant < 0x7f) ? 0x7f : ((cur_quant > 0x6000) ? 0x6000 : cur_quant);
 
-                step = (step * index_scale[val]) >> 8;
-                step = limit(step, 0x7f, 0x6000);
+                dst[dstLoc++] = (byte)(cur_sample & 0xFF);
+                dst[dstLoc++] = (byte)((cur_sample >> 8) & 0xFF);
 
-                dst[dstLoc++] = (byte)(signal & 0xFF);
-                dst[dstLoc++] = (byte)((signal >> 8) & 0xFF);
-                
-                val = data & 15; //Low nybble
-
-                signal += (step * diff_lookup[val]) / 8;
-                signal = limit(signal, -32768, 32767);
-
-                step = (step * index_scale[val]) >> 8;
-                step = limit(step, 0x7f, 0x6000);
-
-                dst[dstLoc++] = (byte)(signal & 0xFF);
-                dst[dstLoc++] = (byte)((signal >> 8) & 0xFF);
+                highNybble = !highNybble;
+                if (!highNybble)
+                {
+                    src++;
+                }
             }
             return dst;
         }
