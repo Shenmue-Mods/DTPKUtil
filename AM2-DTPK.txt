@@ -15,7 +15,7 @@ Sample Entry:
     +- & 0x00800000 - Unknown flag.
     +- & 0x01000000 - Format flag - 0 PCM, 1 ADPCM
     +- & 0x02000000 - Unknown flag. Is NOT Mono/Stereo
-0x04 - 2 bytes - 16 bit Lower Number (Loop start? TBD)
-0x06 - 2 bytes - 16 bit Higher Number (Loop end? TBD)
+0x04 - 2 bytes - 16 bit Loop start offset from start of sample
+0x06 - 2 bytes - 16 bit Loop end offset from start of sample
 0x08 - 4 bytes - Always 0 (?)
 0x0C - 4 bytes - 32 bit length of sample data
