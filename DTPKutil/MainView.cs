@@ -73,10 +73,31 @@ namespace DTPKutil
             }
             catch (Exception ex)
             {
-                txtTrackInfo.Text = "Bad File. Note the XBOX DTPK is not yet implemented.";
+                txtTrackInfo.Text = "Bad File. Note that XBOX DTPK is not yet implemented.";
                 MessageBox.Show($"Processing Failed: {ex.Message}");
             }
             return null;
+        }
+
+        private void BtnDecompressAs_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtInput.Text))
+            {
+                DtpkFile track = LoadTrack();
+                if (track != null)
+                {
+                    SaveFileDialog sfd = new SaveFileDialog();
+                    sfd.Filter = "AM2 DTPK Digital Track PacKage (*.snd)|*.snd|All Files (*.*)|*.*";
+                    if (sfd.ShowDialog(this) == DialogResult.OK)
+                    {
+                        DtpkFile unpacked = track.Decompress();
+                        File.WriteAllBytes(sfd.FileName, unpacked.FileData);
+                        txtTrackInfo.Text = $"Original File:{Environment.NewLine}" + track.PrintSamplesInfo() +
+                            $"{Environment.NewLine}{Environment.NewLine}Decompressed File:{Environment.NewLine}" +
+                            unpacked.PrintSamplesInfo();
+                    }
+                }
+            }
         }
     }
 }
