@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace DTPKutil
 {
@@ -119,8 +117,7 @@ namespace DTPKutil
             {
                 if (sample.Compressed)
                 {
-                    //AICA ADPCM decompresses to 16bit audio, but decompressed samples are 32bit.
-                    sizeIncrease += ((sample.Size * 8) - sample.Size);
+                    sizeIncrease += ((sample.Size * 4) - sample.Size);
                 }
             }
             byte[] newFile = new byte[_data.Length + sizeIncrease];
@@ -145,10 +142,6 @@ namespace DTPKutil
                 byte[] sampleData = GetSampleData(sample, true);
                 if (sample.Compressed)
                 {
-                    //I believe this is in number of samples, but bytes when compressed.
-                    WriteUshort(sampleEntryStart + 4, (ushort)(sample.LoopStart * 2), newFile);
-                    WriteUshort(sampleEntryStart + 6, (ushort)(sample.LoopEnd * 2), newFile);
-                    sampleData = Expand16bitSample(sampleData);
                     WriteUint(sampleEntryStart + 0xC, (uint)sampleData.Length, newFile);
                 }
                 Array.Copy(sampleData, 0, newFile, sampleStart, sampleData.Length);
@@ -166,19 +159,6 @@ namespace DTPKutil
             }
             byte[] retval = new byte[sample.Size];
             Array.Copy(_data, sample.Location, retval, 0, sample.Size);
-            return retval;
-        }
-
-        public static byte[] Expand16bitSample(byte[] sample)
-        {
-            byte[] retval = new byte[sample.Length * 2];
-            for(int i = 0; i < sample.Length/2; i++)
-            {
-                retval[(i * 4) + 0] = sample[i * 2];
-                retval[(i * 4) + 1] = sample[(i * 2) + 1];
-                retval[(i * 4) + 2] = 0;
-                retval[(i * 4) + 3] = 0;
-            }
             return retval;
         }
 
