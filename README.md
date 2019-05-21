@@ -1,4 +1,5 @@
 # DTPKUtil
-Utility for extracting data from AM2 DTPK .SND files
+Utility for extracting samples from Dreamcast AM2 DTPK .SND files
+It can also decompress ADPCM samples to PCM, generating a new .SND file.
 
-Not yet completed - Code available now in case someone wants to help figure out more of the format.
+Work in progress - Code available now in case someone wants to help figure out more of the format.
