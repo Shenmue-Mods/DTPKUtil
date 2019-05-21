@@ -56,11 +56,11 @@ namespace DTPKutil
             {
                 var track = LoadTrack();
                 txtTrackInfo.Text = track.PrintSamplesInfo();
-                for(int i=0; i<track.Samples.Count;i++)
+                for (int i = 0; i < track.Samples.Count; i++)
                 {
-                    string fileOut = Path.GetFileNameWithoutExtension(txtInput.Text) + "_" + (i+1) + ".pcm";
+                    string fileOut = Path.GetFileNameWithoutExtension(txtInput.Text) + "_" + (i + 1) + ".wav";
                     fileOut = Path.Combine(txtOutput.Text, fileOut);
-                    File.WriteAllBytes(fileOut, track.GetSampleData(track.Samples[i], true));
+                    File.WriteAllBytes(fileOut, WavUtil.AddWavHeader(track.GetSampleData(track.Samples[i], true, track.Is2018Format), track.Is2018Format ? (byte)32 : (byte)16));
                 }
             }
         }
@@ -84,18 +84,22 @@ namespace DTPKutil
             if (!string.IsNullOrEmpty(txtInput.Text))
             {
                 DtpkFile track = LoadTrack();
-                if (track != null)
+                if (track != null && !track.Is2018Format)
                 {
                     SaveFileDialog sfd = new SaveFileDialog();
                     sfd.Filter = "AM2 DTPK Digital Track PacKage (*.snd)|*.snd|All Files (*.*)|*.*";
                     if (sfd.ShowDialog(this) == DialogResult.OK)
                     {
-                        DtpkFile unpacked = track.Decompress();
+                        DtpkFile unpacked = track.Decompress(chk32bit.Checked);
                         File.WriteAllBytes(sfd.FileName, unpacked.FileData);
                         txtTrackInfo.Text = $"Original File:{Environment.NewLine}" + track.PrintSamplesInfo() +
                             $"{Environment.NewLine}{Environment.NewLine}Decompressed File:{Environment.NewLine}" +
                             unpacked.PrintSamplesInfo();
                     }
+                }
+                else
+                {
+                    MessageBox.Show("This track appears to be in the format used by the 2018 ports, which doesn't contain compressed samples. Nothing to decompress.", "Nothing to do", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

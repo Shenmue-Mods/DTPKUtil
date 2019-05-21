@@ -7,7 +7,7 @@ namespace DTPKutil
     public enum DtpkVariant
     {
         Dreamcast,
-        Xbox
+        Xbox,
     }
     public class DtpkFile
     {
@@ -22,6 +22,7 @@ namespace DTPKutil
             get { return _samples; }
         }
         private DtpkVariant _variant;
+        public bool Is2018Format { get; private set; }
         public DtpkFile(byte[] data)
         {
             if (data[0] == 'D' && data[1] == 'T' && data[2] == 'P' && data[3] == 'K')
@@ -66,6 +67,13 @@ namespace DTPKutil
                 sample.LoopEnd = ReadUShort(sampleEntryStart + 6);
                 sample.Size = ReadUint(sampleEntryStart + 12);
                 _samples.Add(sample);
+                if (sample.Compressed && (sample.Size >> 1) > sample.LoopEnd)
+                {
+                    //sample.Size >> 1 is the total sample count on DC
+                    //LoopEnd is always <= Sample count. If LoopEnd is > Sample count,
+                    //we probably have 32 bit samples meaning we are the PC version
+                    Is2018Format = true;
+                }
             }
         }
 
@@ -94,6 +102,10 @@ namespace DTPKutil
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"{_samples.Count} samples in file.");
+            if (Is2018Format)
+            {
+                sb.AppendLine($"This file is probably from the 2018 port");
+            }
             for(int i=0; i<_samples.Count; i++)
             {
                 AudioSample sample = _samples[i];
@@ -110,14 +122,28 @@ namespace DTPKutil
         /// <summary>
         /// Get a copy of this DtpkFile with all samples decompressed
         /// </summary>
-        public DtpkFile Decompress()
+        public DtpkFile Decompress(bool into32bit = false)
         {
             uint sizeIncrease = 0;
-            foreach (AudioSample sample in _samples)
+            if (!Is2018Format)
             {
-                if (sample.Compressed)
+                foreach (AudioSample sample in _samples)
                 {
-                    sizeIncrease += ((sample.Size * 4) - sample.Size);
+                    if (into32bit)
+                    {
+                        if (sample.Compressed)
+                        {
+                            sizeIncrease += ((sample.Size * 8) - sample.Size);
+                        }
+                        else
+                        {
+                            sizeIncrease += sample.Size; //Double for 32 bit
+                        }
+                    }
+                    else if(sample.Compressed)
+                    {
+                        sizeIncrease += ((sample.Size * 4) - sample.Size);
+                    }
                 }
             }
             byte[] newFile = new byte[_data.Length + sizeIncrease];
@@ -139,8 +165,8 @@ namespace DTPKutil
                     sampleLocation |= 0x2000000;
                 }
                 WriteUint(sampleEntryStart, sampleLocation, newFile);
-                byte[] sampleData = GetSampleData(sample, true);
-                if (sample.Compressed)
+                byte[] sampleData = GetSampleData(sample, true, into32bit);
+                if (!Is2018Format && sample.Compressed)
                 {
                     WriteUint(sampleEntryStart + 0xC, (uint)sampleData.Length, newFile);
                 }
@@ -151,14 +177,22 @@ namespace DTPKutil
             return new DtpkFile(newFile);
         }
 
-        public byte[] GetSampleData(AudioSample sample, bool decompress)
+        public byte[] GetSampleData(AudioSample sample, bool decompress, bool scaleTo32bit)
         {
-            if (sample.Compressed && decompress)
+            byte[] retval = null;
+            if (!Is2018Format && sample.Compressed && decompress)
             {
-                return adpcm2pcm(sample.Location, sample.Size);
+                retval = adpcm2pcm(sample.Location, sample.Size);
             }
-            byte[] retval = new byte[sample.Size];
-            Array.Copy(_data, sample.Location, retval, 0, sample.Size);
+            else
+            {
+                retval = new byte[sample.Size];
+                Array.Copy(_data, sample.Location, retval, 0, sample.Size);
+            }
+            if (scaleTo32bit)
+            {
+                retval = WavUtil.ChangeBitDepth16to32(retval);
+            }
             return retval;
         }
 
