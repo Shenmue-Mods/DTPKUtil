@@ -23,7 +23,7 @@ namespace DTPKutil
                     Console.WriteLine("  -decompress <inputFile> <outputFile>");
                     Console.WriteLine("      Decompress a .SND file normally.");
                     Console.WriteLine("  -decompress32 <inputFile> <outputFile>");
-                    Console.WriteLine("      Decompress a .SND file and expand all samples to 32 bit.");
+                    Console.WriteLine("      Decompress a .SND file and expand samples for PC release.");
                     return;
                 }
                 if(args.Length >= 3)
