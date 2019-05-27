@@ -60,11 +60,12 @@ namespace DTPKutil
                 AudioSample sample = new AudioSample();
                 uint info = ReadUint(sampleEntryStart);
                 sample.Location = info & 0x7FFFFF;
-                sample.UnknownFlag = ((info & 0x800000) == 0x800000);
+                sample.LowFrequency = ((info & 0x800000) == 0x800000);
                 sample.Compressed = ((info & 0x1000000) == 0x1000000);
                 sample.UnknownFlag2 = ((info & 0x2000000) == 0x2000000);
                 sample.LoopStart = ReadUShort(sampleEntryStart + 4);
                 sample.LoopEnd = ReadUShort(sampleEntryStart + 6);
+                sample.LowFrequencyAlt = ReadUint(sampleEntryStart + 8) > 0;
                 sample.Size = ReadUint(sampleEntryStart + 12);
                 _samples.Add(sample);
                 if (sample.Compressed && (sample.Size >> 1) > sample.LoopEnd)
@@ -111,7 +112,7 @@ namespace DTPKutil
                 AudioSample sample = _samples[i];
                 sb.Append($"{i + 1}. ");
                 sb.Append((sample.Compressed) ? "ADPCM " : "PCM ");
-                sb.Append((sample.UnknownFlag ? "Flag1=Yes " : "Flag1=No "));
+                sb.Append((sample.LowFrequency ? "Flag1=Yes " : "Flag1=No "));
                 sb.Append((sample.UnknownFlag2 ? "Flag2=Yes. " : "Flag2=No. "));
                 sb.Append($"Offset: {sample.Location.ToString("X")} Len: {sample.Size.ToString("X")} ");
                 sb.AppendLine($"Loop Start: {sample.LoopStart} Loop End: {sample.LoopEnd}");
@@ -129,7 +130,7 @@ namespace DTPKutil
             {
                 foreach (AudioSample sample in _samples)
                 {
-                    if (into32bit)
+                    if (into32bit && (sample.LowFrequency || sample.LowFrequencyAlt))
                     {
                         if (sample.Compressed)
                         {
@@ -156,7 +157,7 @@ namespace DTPKutil
                 var sample = _samples[(int)i];
                 uint sampleEntryStart = sampleTable + 4 + (i * 0x10);
                 uint sampleLocation = sampleStart;
-                if (sample.UnknownFlag)
+                if (sample.LowFrequency)
                 {
                     sampleLocation |= 0x800000;
                 }
@@ -165,7 +166,7 @@ namespace DTPKutil
                     sampleLocation |= 0x2000000;
                 }
                 WriteUint(sampleEntryStart, sampleLocation, newFile);
-                byte[] sampleData = GetSampleData(sample, true, into32bit);
+                byte[] sampleData = GetSampleData(sample, true, into32bit && (sample.LowFrequency || sample.LowFrequencyAlt));
                 if (!Is2018Format && sample.Compressed)
                 {
                     WriteUint(sampleEntryStart + 0xC, (uint)sampleData.Length, newFile);
@@ -280,10 +281,11 @@ namespace DTPKutil
     {
         public uint Location { get; internal set; }
         public uint Size { get; internal set; }
-        public bool UnknownFlag { get; internal set; }
+        public bool LowFrequency { get; internal set; }
         public bool Compressed { get; internal set; }
         public bool UnknownFlag2 { get; internal set; }
         public ushort LoopStart { get; internal set; }
         public ushort LoopEnd { get; internal set; }
+        public bool LowFrequencyAlt { get; internal set; }
     }
 }
