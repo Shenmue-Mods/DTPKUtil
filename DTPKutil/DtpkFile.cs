@@ -7,6 +7,8 @@ namespace DTPKutil
     public enum DtpkVariant
     {
         Dreamcast,
+        DreamcastSGTS,
+        DreamcastAMSS,
         Xbox,
     }
     public class DtpkFile
@@ -34,6 +36,14 @@ namespace DTPKutil
             {
                 _variant = DtpkVariant.Xbox;
             }
+            else if (data[0] == 'S' && data[1] == 'G' && data[2] =='T' && data[3] == 'S') 
+            {
+                _variant = DtpkVariant.DreamcastSGTS;
+            }
+            else if (data[0] == 'A' && data[1] == 'M' && data[2] == 'S' && data[3] == 'S')
+            {
+                _variant = DtpkVariant.DreamcastAMSS;
+            }
             else
             {
                 throw new ArgumentException("Not DTPK");
@@ -46,17 +56,24 @@ namespace DTPKutil
         {
             if (_variant == DtpkVariant.Dreamcast)
                 ParseDreamcast();
+            else if (_variant == DtpkVariant.DreamcastSGTS)
+                ParseSGTS();
+            else if (_variant == DtpkVariant.DreamcastAMSS)
+                ParseAMSS();
             else if (_variant == DtpkVariant.Xbox)
                 ParseXbox();
         }
 
-        private void ParseDreamcast()
+        private void ParseDreamcast(uint? sampleTable = null)
         {
-            uint sampleTable = ReadUint(0x3C);
-            uint sampleCount = ReadUint(sampleTable) + 1;
+            if (sampleTable == null)
+            {
+                sampleTable = ReadUint(0x3C);
+            }
+            uint sampleCount = ReadUint(sampleTable.Value) + 1;
             for (uint i = 0; i < sampleCount; i++)
             {
-                uint sampleEntryStart = sampleTable + 4 + (i * 0x10);
+                uint sampleEntryStart = sampleTable.Value + 4 + (i * 0x10);
                 AudioSample sample = new AudioSample();
                 uint info = ReadUint(sampleEntryStart);
                 sample.Location = info & 0x7FFFFF;
@@ -75,6 +92,34 @@ namespace DTPKutil
                     //we probably have 32 bit samples meaning we are the PC version
                     Is2018Format = true;
                 }
+            }
+        }
+
+        private void ParseSGTS()
+        {
+            ushort entries = ReadUShort(0xE);
+            int dtpkStart = 0x10 + (entries * 8);
+            if (_data[dtpkStart+0] == 'D' && _data[dtpkStart + 1] == 'T' && _data[dtpkStart + 2] == 'P' && _data[dtpkStart + 3] == 'K')
+            {
+                ParseDreamcast((uint)dtpkStart + ReadUint((uint)dtpkStart + 0x3C));
+            }
+            else
+            {
+                throw new ArgumentException("Invalid or Unsupported SGTS DTPK.");
+            }
+        }
+
+        private void ParseAMSS()
+        {
+            ushort entries = ReadUShort(0xE);
+            int dtpkStart = 0x20 + (entries * 0x90);
+            if (_data[dtpkStart + 0] == 'D' && _data[dtpkStart + 1] == 'T' && _data[dtpkStart + 2] == 'P' && _data[dtpkStart + 3] == 'K')
+            {
+                ParseDreamcast((uint)dtpkStart + ReadUint((uint)dtpkStart + 0x3C));
+            }
+            else
+            {
+                throw new ArgumentException("Invalid or Unsupported AMSS DTPK.");
             }
         }
 
